@@ -1,0 +1,2744 @@
+{% if subdomain == 'fit' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    {% if fit_web %}
+    set $upstream_fit_web http://{{ fit_web }};
+    {% endif %}
+    {% if fit_api %}
+    set $upstream_fit_api http://{{ fit_api }};
+    {% endif %}
+
+    {% if fit_web %}
+    location @ui {
+        include proxy_params;
+        proxy_pass $upstream_fit_web;
+    }
+
+    location / {
+        try_files $uri @ui;
+    }
+    {% endif %}
+
+    {% if fit_api %}
+    location /api/ {
+        try_files $uri @api;
+    }
+
+    location @api {
+        rewrite ^/api/(.*)$ /$1 break;
+        include proxy_params;
+        proxy_pass $upstream_fit_api;
+    }
+    {% endif %}
+}
+{% elif subdomain == 'dooku' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    {% if dooku_ui %}
+    set $upstream_dooku_ui http://{{ dooku_ui }};
+    {% endif %}
+    {% if dooku_api %}
+    set $upstream_dooku_api http://{{ dooku_api }};
+    {% endif %}
+
+    {% if dooku_ui %}
+    location @ui {
+        include proxy_params;
+        proxy_pass $upstream_dooku_ui;
+    }
+
+    location / {
+        try_files $uri @ui;
+    }
+    {% endif %}
+
+    {% if dooku_api %}
+    location /api/ {
+        try_files $uri @api;
+    }
+    location /admin/ {
+        try_files $uri @api;
+    }
+
+    location @api {
+        include proxy_params;
+        proxy_pass $upstream_dooku_api;
+    }
+    {% endif %}
+}
+{% elif subdomain == 'ocr' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+    set $upstream_ocr http://{{ ocr }};
+    location / {
+        include proxy_params;
+        proxy_pass $upstream_ocr;
+    }
+}
+{% elif subdomain == 'abdm' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+    set $upstream_abdm_abha http://{{ abdm_abha }};
+    set $upstream_abdm_hrp http://{{ abdm_hrp }};
+    set $upstream_abdm_uhi_eua http://{{ abdm_uhi_eua }};
+    set $upstream_abdm_uhi_hspa http://{{ abdm_uhi_hspa }};
+    location /abha/ {
+      rewrite ^/abha(/.*)$ $1 break;
+
+      proxy_pass $upstream_abdm_abha;
+      include proxy_params;
+    }
+    
+    location /hrp/ {
+      proxy_pass $upstream_abdm_hrp;
+      include proxy_params;
+    }
+
+    location /uhi-eua/ {
+      proxy_pass $upstream_abdm_uhi_eua;
+      include proxy_params;
+    }
+
+    location /uhi-hspa/ {
+      proxy_pass $upstream_abdm_uhi_hspa;
+      include proxy_params;
+    }
+}
+{% elif subdomain == 'housemd' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    {% if housemd_ui %}
+    set $upstream_housemd_ui http://{{ housemd_ui }};
+    {% endif %}
+    {% if pharmacopeia_api %}
+    set $upstream_pharmacopeia_api http://{{ pharmacopeia_api }};
+    {% endif %}
+
+    {% if housemd_ui %}
+    location @ui {
+        include proxy_params;
+        proxy_pass $upstream_housemd_ui;
+    }
+
+    location / {
+        try_files $uri @ui;
+    }
+    {% endif %}
+
+    {% if pharmacopeia_api %}
+    location /api/ {
+        try_files $uri @api;
+    }
+
+    location @api {
+        rewrite ^/api/(.*)$ /$1 break;
+        include proxy_params;
+        proxy_pass $upstream_pharmacopeia_api;
+    }
+    {% endif %}
+}
+{% elif subdomain == 'www' %}
+### Testing if the client is a mobile or a desktop.
+### The selection is based on the usual UA strings for desktop browsers.
+
+## Testing a user agent using a method that reverts the logic of the
+## UA detection. Inspired by notnotmobile.appspot.com.
+map $http_user_agent $fabric_is_mobile_1 {
+  default 0;
+  "~*(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|pixel|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino" 1;
+}
+
+map $http_user_agent $fabric_is_mobile {
+  default $fabric_is_mobile_1;
+  "~*^(1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-)" 1;
+}
+
+map $http_accept $fabric_is_header_not_json {
+  default 1;
+  ~application\/json 0;
+}
+
+map $args $fabric_is_not_json {
+  default $fabric_is_header_not_json;
+  ~json=true 0;
+}
+
+map $http_user_agent $fabric_is_practo_crawl_bot_and_not_json {
+  default 0;
+  "practoVbQg9zVGDmRvMAvArogetbotsapphire" $fabric_is_not_json;
+}
+
+map $fabric_is_mobile $fabric_is_topaz {
+  default 0;
+  0 $fabric_is_not_json;
+}
+
+map $fabric_is_mobile $fabric_is_sapphire {
+  default $fabric_is_practo_crawl_bot_and_not_json;
+  1 $fabric_is_not_json;
+}
+
+split_clients "${time_local}" $profile_traffic_is_consumer_ui {
+  50%   {% if consumer_ui -%} 1 {% else -%} 0 {%- endif -%};
+  *      0;
+}
+
+map $cookie_is_profile_from_consumer_ui $is_consumer_ui_profile_cookie_set {
+  "true"  1;
+  "false" 0;
+  default 2;
+}
+
+map $arg_is_consumer_ui $fabric_profile_forced_to_consumer_ui {
+  "true" 1;
+  "false" 0;
+  default 2;
+}
+
+map "${fabric_is_topaz}${fabric_is_sapphire}${fabric_profile_forced_to_consumer_ui}${is_consumer_ui_profile_cookie_set}${profile_traffic_is_consumer_ui}" $profile_upstream {
+  "~^1....$" "topaz";
+  "~^00...$" "fabric";
+  "~^010..$" "sapphire";
+  "~^011..$" "consumer_ui";
+  "~^0120.$" "sapphire";
+  "~^0121.$" "consumer_ui";
+  "~^01220$" "sapphire";
+  "~^01221$" "consumer_ui";
+  default    "sapphire";
+}
+
+
+server {
+    server_name www-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    {% if nav %}
+    set $upstream_nav http://{{ nav }};
+    {% endif %}
+
+    {% if fabric %}
+    set $upstream_fabric_k8s_nginx http://{{ fabric }};
+    set $upstream_search_practo https://search-{{ instance_name }}.practodev.com;
+    {% endif %}
+
+    {% if static_page_creator %} 
+      set $upstream_static_page_creator http://{{ static_page_creator }};
+    {% endif %}
+
+    {% if sapphire %}
+    set $upstream_sapphire_app http://{{ sapphire }};
+    {% endif %}
+    {% if partner_profiles %}
+    set $upstream_partner_profiles_app http://{{ partner_profiles }};
+    {% endif %}
+    {% if profile_settings %}
+    set $upstream_profile_settings http://{{ profile_settings }};
+    {% endif %}
+    {% if content_launchpad %}
+    set $upstream_content_launchpad http://{{ content_launchpad }};
+    {% endif %}
+    {% if profile_onboarding %}
+    set $upstream_profile_onboarding http://{{ profile_onboarding }};
+    {% endif %}
+    {% if profile_dashboard %}
+    set $upstream_profile_dashboard http://{{ profile_dashboard }};
+    {% endif %}
+    {% if purchase_flow %}
+    set $upstream_purchase_flow http://{{ purchase_flow }};
+    {% endif %}
+    {% if prime_online_mobile %}
+    set $upstream_prime_online_mobile http://{{ prime_online_mobile }};
+    {% endif %}
+    {% if reach_connect %}
+    set $upstream_reach_connect http://{{ reach_connect }};
+    {% endif %}
+    {% if prime_dashboard %}
+      set $upstream_prime_dashboard http://{{ prime_dashboard }};
+    {% endif %}
+    {% if prepaid_settings %}
+      set $upstream_prepaid_settings http://{{ prepaid_settings }};
+    {% endif %}
+    {% if dx_ui_desktop %}
+    set $upstream_dx_ui_desktop http://{{ dx_ui_desktop }};
+    {% endif %}
+    {% if dx %}
+    set $upstream_dx http://{{ dx }};
+    {% endif %}
+    {% if dx_ui_mobile %}
+    set $upstream_dx_ui_mobile http://{{ dx_ui_mobile }};
+    {% endif %}
+    {% if dx_valkyrie %}
+    set $upstream_dx_valkyrie http://{{ dx_valkyrie }};
+    {% endif %}
+    {% if client_api %}
+    set $upstream_client_api http://{{ client_api }};
+    {% endif %}
+    {% if marketplace_api %}
+    set $upstream_marketplace_api http://{{ marketplace_api }};
+    {% endif %}
+    {% if topaz %}
+    set $upstream_topaz http://{{ topaz }};
+    {% endif %}
+    {% if book_flow %}
+    set $upstream_book_flow http://{{ book_flow }};
+    {% endif %}
+    {% if home %}
+    set $upstream_home http://{{ home }};
+    {% endif %}
+    {% if providers %}
+    set $upstream_providers http://{{ providers }};
+    {% endif %}
+    {% if qa_efficiency %}
+    set $upstream_qastub_app http://{{ qa_efficiency }};
+    {% endif %}
+    {% if healthwiki_data %}
+    set $upstream_healthwiki_data http://{{healthwiki_data}};
+    {% endif %}
+    {% if pharmacopeia_api %}
+    set $upstream_pharmacopeia_api http://{{ pharmacopeia_api }};
+    {% endif %}
+    {% if fit_connect_feed %}
+    set $upstream_fit_connect_feed http://{{ fit_connect_feed }};
+    {% endif %}
+    {% if fit_api %}
+    set $upstream_fit_api http://{{ fit_api }};
+    {% endif %}
+    {% if dose_api %}
+    set $upstream_dose_api http://{{ dose_api }};
+    {% endif %}
+    {% if dawai %}
+    set $upstream_dawai http://{{ dawai }};
+    {% endif %}
+    {% if ecommerce %}
+    set $upstream_ecommerce http://{{ ecommerce }};
+    {% endif %}
+    {% if experiments %}
+    set $upstream_experiments http://{{ experiments }};
+    {% endif %}
+    {% if feedback_dashboard %}
+    set $upstream_feedback_dashboard http://{{ feedback_dashboard }};
+    {% endif %}
+    {% if subscription_web %}
+    set $upstream_subscription_web http://{{ subscription_web }};
+    {% endif %}
+    {% if consumer_home_mweb %}
+    set $upstream_consumer_home_mweb http://{{ consumer_home_mweb }};
+    {% endif %}
+    {% if consumer_home_desktop %}
+    set $upstream_consumer_home_desktop http://{{ consumer_home_desktop }};
+    {% endif %}
+    {% if consult_ui %}
+    set $upstream_consult_ui http://{{ consult_ui }};
+    {% endif %}
+    {% if consult_web %}
+    set $upstream_consult_web http://{{ consult_web }};
+    {% endif %}
+    {% if khoj_api %}
+    set $upstream_khoj_api http://{{ khoj_api }};
+    {% endif %}
+    {% if space_ui %}
+    set $upstream_space_ui http://{{ space_ui }};
+    {% endif %}
+    {% if mds_search_aggregator %}
+    set $upstream_mds_search_aggregator_api http://{{ mds_search_aggregator }};
+    {% endif %}
+    {% if consumer_ui %}
+    set $upstream_consumer_ui http://{{ consumer_ui }};
+    {% endif %}
+
+    {% if qa_efficiency %}
+
+    location ^~ /qastub/status {
+        include proxy_params;
+        proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /marketplace-api/desktop/provider {
+        include proxy_params;
+        proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /marketplace-api/desktop/provider-seo {
+        include proxy_params;
+        proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /marketplace-api/dweb/profile/provider {
+         include proxy_params;
+         proxy_pass $upstream_qastub_app;
+     }
+
+     location ^~ /marketplace-api/mweb/profile/provider {
+         include proxy_params;
+         proxy_pass $upstream_qastub_app;
+     }
+
+    location ^~ /marketplace-api/dweb/profile/establishment {
+        include proxy_params;
+        proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /marketplace-api/dweb/search/provider-seo {
+        include proxy_params;
+        proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /marketplace-api/dweb/search/provider {
+        include proxy_params;
+        proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /health/api/ {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /health/core-api/ {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /client-auth/validate/ {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /content/v1/ {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    location ~ ^/wave/(.*)$ {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location ^~ /cerebro/v2/autocomplete/ {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    location = /Bangalore {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /client-api/v1/ {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /client-api/v3/ {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /acl/v1/ {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /_enquire_profile {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+     location ^~ /campaign/ {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    location ^~ /subscription/impressions/ {
+      include proxy_params;
+      proxy_pass $upstream_qastub_app;
+    }
+
+    {% endif %}
+
+    {% if home %}
+      location  ~ /home {
+        include proxy_params;
+        proxy_pass $upstream_home;
+      }
+      location /home-status-check {
+        include proxy_params;
+        proxy_pass $upstream_home;
+      }
+      location /web-assets/home {
+        include proxy_params;
+        proxy_pass $upstream_home;
+      }
+    {% endif %}
+
+    {% if book_flow %}
+      location ~ ^/((id-id|pt-br|en-id|en|es-mx)/)?appointment {
+        include proxy_params;
+        proxy_pass $upstream_book_flow;
+      }
+      location /web-assets/appointment {
+        include proxy_params;
+        proxy_pass $upstream_book_flow;
+      }
+    {% endif %}
+    {% if topaz %}
+    location = /topaz-status-check {
+      include proxy_params;
+      proxy_pass $upstream_topaz;
+    }
+
+    location /topaz {
+      include proxy_params;
+      proxy_pass $upstream_topaz;
+    }
+
+    location /topaz/ {
+      include proxy_params;
+      proxy_pass $upstream_topaz;
+    }
+
+    location /web-assets/ {
+      include proxy_params;
+      proxy_pass $upstream_topaz;
+    }
+    {% endif %}
+    location = /appointments/list {
+      include proxy_params;
+      #use sapphire
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+
+      #use topaz
+      if ($fabric_is_sapphire = 0) {
+        proxy_pass $upstream_topaz;
+      }
+    }
+
+    location ~ ^/appointment {
+      include proxy_params;
+
+      #use sapphire
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+
+      #use topaz
+      if ($fabric_is_sapphire = 0) {
+        proxy_pass $upstream_topaz;
+      }
+    }
+    {% if fabric %}
+    location /bundles/practopractoapp/images {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+    location ~ ^/health/core-api/resources/ {
+      rewrite ^/health/core-api/resources/(.*)$ /bundles/practopractoapp/$1 break;
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+    location ~ ^/health/core-api/ {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+    {% endif %}
+
+    location /cerebro/autocomplete {
+      proxy_set_header Host search-{{instance_name}}.practodev.com;
+      proxy_pass $upstream_search_practo/autocomplete$is_args$query_string;
+    }
+
+    location /cerebro/v2/autocomplete {
+      proxy_set_header Host search-{{instance_name}}.practodev.com;
+      proxy_pass $upstream_search_practo/v2/autocompleteindex$is_args$query_string;
+    }
+
+    location /cerebro/autocomplete/v3/keyword {
+      proxy_set_header Host search-{{instance_name}}.practodev.com;
+      proxy_pass $upstream_search_practo/autocomplete/v3/keyword$is_args$query_string;
+    }
+
+    location /cerebro/v3/autocomplete {
+      proxy_set_header Host search-{{instance_name}}.practodev.com;
+      proxy_pass $upstream_search_practo/v3/autocomplete$is_args$query_string;
+    }
+
+    {% if consult_ui %}
+    location ^~ /__consult-ui/ {
+      internal;
+      # Forward the actual url in the upstream without /__consult-ui prefix
+      rewrite ^/__consult-ui/(.*) /$1 break;
+
+      include proxy_params;
+      proxy_pass $upstream_consult_ui;
+    }
+
+    location ^~ /consult/static/ {
+      include proxy_params;
+      proxy_pass $upstream_consult_ui;
+    }
+
+    location = /consult-ui-status {
+      rewrite ^/(.*)$ /__consult-ui/$1 last;
+    }
+    {% endif %}
+
+    {% if fabric %}
+    location /jarvis/healthcheck {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location /css/ {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location /js/ {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location ~ ^/ray/(.*)\.[0-9]+\.(css|min\.js|js)$ {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location /ray {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location ~ ^/wave/(.*)$ {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location = /for-doctors/profile {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+
+    }
+
+    location /for-doctors {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location /insurance {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location /assets {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location /corporate {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location /hello {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location @ray_website {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+    {% endif %}
+
+    {% if consult_web %}
+    {% if consult_ui %}
+    location = /consult {
+      include proxy_params;
+      proxy_pass $upstream_consult_ui;
+    }
+
+    location = /consult/amp {
+      include proxy_params;
+      proxy_pass $upstream_consult_ui;
+    }
+
+    location ~* ^/consult/(ask-.*-online)$ {
+      rewrite ^/(.*)$ /__consult-ui/$1 last;
+    }
+
+    location = /consult/direct/new_consultation {
+        if ($fabric_is_mobile = 1) {
+            rewrite ^/(.*)$ /__consult-ui/$1 last;
+        }
+
+        include proxy_params;
+        proxy_pass $upstream_consult_web;
+    }
+
+    location = /consult/direct/basic_details {
+        if ($fabric_is_mobile = 1) {
+            rewrite ^/(.*)$ /__consult-ui/$1 last;
+        }
+
+        include proxy_params;
+        proxy_pass $upstream_consult_web;
+    }
+
+    location = /consult/direct/payment {
+        if ($fabric_is_mobile = 1) {
+            rewrite ^/(.*)$ /__consult-ui/$1 last;
+        }
+
+        include proxy_params;
+        proxy_pass $upstream_consult_web;
+    }
+
+    location = /onlineconsult/direct/basic_details {
+      if ($fabric_is_mobile = 1) {
+          rewrite ^/(.*)$ /__consult-ui/$1 last;
+      }
+
+      include proxy_params;
+      proxy_pass $upstream_consult_web;
+    }
+    {% endif %}
+
+    location = /onlineconsult/direct/start {
+      include proxy_params;
+      proxy_pass $upstream_consult_web;
+    }
+
+    location ~ ^/consult(.*)$ {
+      include proxy_params;
+      proxy_pass $upstream_consult_web;
+    }
+    {% endif %}
+
+    {% if client_api %}
+    location /client-api {
+      include proxy_params;
+      proxy_pass $upstream_client_api;
+    }
+    location /client-auth {
+      include proxy_params;
+      proxy_pass $upstream_client_api;
+    }
+    {% endif %}
+    {% if marketplace_api %}
+    location /marketplace-api {
+      include proxy_params;
+      proxy_pass $upstream_marketplace_api;
+    }
+    location ~ ^/s3_domain_payment_invoice(?P<s3_path_payment_invoice>.*)$ {
+    internal;
+    proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+    proxy_pass          https://s3-ap-southeast-1.amazonaws.com$s3_path_payment_invoice$is_args$args;
+    proxy_hide_header   Content-Disposition;
+    proxy_hide_header   Cache-Control;
+    }
+    location /dev-nhs-abha/ {
+        proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+        proxy_pass https://s3.ap-south-1.amazonaws.com;
+        proxy_set_header Content-Type '';
+        internal;
+    }
+    {% endif %}
+    {% if partner_profiles %}
+    location /partners {
+      include proxy_params;
+      proxy_pass $upstream_partner_profiles_app;
+    }
+    {% endif %}
+    {% if profile_settings %}
+    location /partners/book-settings {
+      rewrite ^/partners/book-settings(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_profile_settings;
+    }
+    {% endif %}
+    {% if content_launchpad %}
+    location /partners/content-launchpad {
+      include proxy_params;
+      proxy_pass $upstream_content_launchpad;
+    }
+    {% endif %}
+    {% if profile_onboarding %}
+    location /partners/onboarding {
+      rewrite ^/partners/onboarding(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_profile_onboarding;
+    }
+    {% endif %}
+    {% if profile_dashboard %}
+    location ~ ^/(partners/profile|partners/manage-staff|partners/striker-policy) {
+      rewrite ^/partners/profile/(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_profile_dashboard;
+    }
+    {% endif %}
+    {% if purchase_flow %}
+    location /partners/purchase-flow {
+      rewrite ^/partners/purchase-flow(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_purchase_flow;
+    }
+    {% endif %}
+    {% if reach_connect %}
+    location /partners/connect {
+      rewrite ^/partners/connect(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_reach_connect;
+    }
+    {% endif %}
+    {% if prime_dashboard %}
+    location /partners/prime {
+      rewrite ^/partners/prime(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_prime_dashboard;
+    }
+    {% endif %}
+    {% if prime_online_mobile %}
+    location ~ ^/partners/prime-online/mobile {
+      rewrite ^/partners/prime-online/mobile(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_prime_online_mobile;
+    }
+    {% endif %}
+    {% if prepaid_settings %}
+    location ~ ^/partners/(prime-online|prepaid-settings) {
+      rewrite ^/partners/prepaid-settings(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_prepaid_settings;
+    }
+    {% endif %}
+    {% if feedback_dashboard %}
+    location /feedback/dashboard {
+      rewrite ^/feedback/dashboard/(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_feedback_dashboard;
+    }
+    {% endif %}
+    {% if healthwiki_data %}
+    location /healthwiki-data {
+      include proxy_params;
+      proxy_pass $upstream_healthwiki_data;
+    }
+    {% endif %}
+    {% if providers %}
+    location = /ihrs2019 {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+    location = /ihrs2020 {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+    location /providers {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ~* ^\/(en-sg|en-ph|en-id|)\/?(company)/ {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location = /en-id/providers {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ^~ /en-id/providers/ {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location = /en-sg/providers {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ^~ /en-sg/providers {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location = /en-ph/providers {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ^~ /en-ph/providers {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location = /pt-br/fornecedores/profissionais-e-clínicas/ray {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ^~ /pt-br/fornecedores/profissionais-e-clínicas/ray/ {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ~* ^\/(en-in|en-sg|en-ph|pt-br|en-id|id-id|)\/?(health-app)$ {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location = /app {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ~* ^\/(en-in|en-sg|en-ph|pt-br|en-id|id-id|)\/?(practo-pro-app)$ {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ~* ^\/(en-in|en-sg|en-ph|pt-br|en-id|id-id|)\/?(primebenefits)$ {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location = /id-id/providers/klinik/ray {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ^~ /id-id/providers/klinik/ray/ {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ^~ /pt-br/empresa/  {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+
+    location ^~ /id-id/perusahaan/ {
+      include proxy_params;
+      proxy_pass $upstream_providers;
+    }
+    {% endif %}
+    {% if fit_connect_feed %}
+      {% if fit_api %}
+      location ^~ /healthfeed/api/ {
+        rewrite ^/healthfeed/api/(.*)$ /$1 break;
+        proxy_pass $upstream_fit_api;
+        include proxy_params;
+      }
+      {% endif %}
+    location /healthfeed {
+      include proxy_params;
+      proxy_pass $upstream_fit_connect_feed;
+    }
+    {% endif %}
+    {% if dose_api %}
+    location ^~ /dose/api/ {
+      add_header Access-Control-Allow-Origin $http_origin;
+      add_header Access-Control-Allow-Methods "GET, POST, PATCH, DELETE, OPTIONS";
+      add_header Access-Control-Allow-Headers 'x-profile-token,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+      add_header 'Access-Control-Allow-Credentials' 'true' always;
+      rewrite  ^/dose/(.*)  /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_dose_api;
+      if ($request_method = "OPTIONS" ) {
+        return 204;
+      }
+    }
+    {% endif %}
+    {% if khoj_api %}
+    location ^~ /khoj/ {
+        include proxy_params;
+        rewrite ^/khoj/(.*)$ /$1 break;
+        proxy_pass $upstream_khoj_api;
+    }
+    {% endif %}
+    {% if dawai %}
+    location /medicine-info {
+      include proxy_params;
+      proxy_pass $upstream_dawai;
+
+      {% if ecommerce %}
+      # Medicine Info Brand page
+      location ~* ^/medicine-info/[a-zA-Z0-9-]+-[0-9]+$ {
+        include proxy_params;
+        proxy_pass $upstream_ecommerce;
+      }
+
+      # Medicine Info Salt page
+      location ~* ^/medicine-info/[a-zA-Z0-9-]+-api$ {
+        include proxy_params;
+        proxy_pass $upstream_ecommerce;
+      }
+
+      # Medicine Info Amp Salt page
+      location ~* ^/medicine-info/amp/[a-zA-Z0-9-]+-api$ {
+        include proxy_params;
+        proxy_pass $upstream_ecommerce;
+      }
+
+      # Medicine Info Brand page
+      location ~* ^/medicine-info/amp/[a-zA-Z0-9-]+-[0-9]+$ {
+        include proxy_params;
+        proxy_pass $upstream_ecommerce;
+      }
+      {% endif %}
+    }
+
+
+    location /ecommerce-api {
+      include proxy_params;
+      proxy_pass $upstream_dawai;
+    }
+    {% endif %}
+    {% if ecommerce %}
+    location /ecommerce {
+      include proxy_params;
+      proxy_pass $upstream_ecommerce;
+    }
+
+    location /health-products {
+      include proxy_params;
+      proxy_pass $upstream_ecommerce;
+    }
+
+    location /ecommerce-assets {
+      include proxy_params;
+      proxy_pass $upstream_ecommerce;
+    }
+
+    location ^~ /order {
+      include proxy_params;
+      proxy_pass $upstream_ecommerce;
+    }
+    {% endif %}
+    {% if subscription_web %}
+    location = /plus {
+      include proxy_params;
+      proxy_pass $upstream_subscription_web;
+    }
+    location ^~ /plus/ {
+      include proxy_params;
+      proxy_pass $upstream_subscription_web;
+    }
+    {% endif %}
+    {% if subscriptions %}
+      set $upstream_subscriptions http://{{ subscriptions }};
+      location ^~ /subscriptions/api/v1/ {
+        rewrite ^/subscriptions/api/v1/(.*)$ /$1 break;
+        include proxy_params;
+        proxy_pass $upstream_subscriptions;
+      }
+    {% endif %}
+
+    {% if consult_api %}
+      set $upstream_consult_api http://{{ consult_api }};
+      location ^~ /consult/api/v1/ {
+        rewrite ^/consult/api/v1/(.*)$ /$1 break;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header GEOIP-CITY $geoip_city;
+        proxy_set_header GEOIP-COUNTRY-CODE $geoip_country_code;
+        proxy_pass $upstream_consult_api;
+        proxy_set_header Host consult-{{ instance_name }}.practodev.com;
+      }
+    {% endif %}
+
+    {% if microapp_api %}
+      set $upstream_microapp_api http://{{ microapp_api }};
+      location ^~ /microapp/api/v1/ {
+        include proxy_params;
+        proxy_pass $upstream_microapp_api;
+      }
+    {% endif %}
+
+    {% if pharmacopeia_api %}
+    #Practopedia Application
+    location ^~ /pharmacopeia/api/ {
+      rewrite ^/pharmacopeia/api/(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_pharmacopeia_api;
+    }
+    {% endif %}
+
+    {% if mds_search_aggregator %}
+    location ^~ /practopedia/ {
+      rewrite ^/practopedia/(.*)$ /$1 break;
+      include proxy_params;
+      proxy_pass $upstream_mds_search_aggregator_api;
+    }
+    {% endif %}
+
+    {% if dx %}
+    location /dxapi {
+      add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+      add_header Access-Control-Allow-Origin "https://drive-{{ instance_name }}.practodev.com";
+      add_header Access-Control-Allow-Methods "GET, POST, PATCH, DELETE, OPTIONS";
+      add_header Access-Control-Allow-Headers 'x-profile-token,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+      add_header Access-Control-Allow-Credentials 'true' always;
+      include proxy_params;
+      rewrite ^/dxapi/(.*) /$1 break;
+      proxy_pass $upstream_dx;
+    }
+    {% else %}
+    location /dxapi {
+      add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+      add_header Access-Control-Allow-Origin "https://drive-{{ instance_name }}.practodev.com";
+      add_header Access-Control-Allow-Methods "GET, POST, PATCH, DELETE, OPTIONS";
+      add_header Access-Control-Allow-Headers 'x-profile-token,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+      add_header Access-Control-Allow-Credentials 'true' always;
+      include proxy_params;
+      proxy_pass https://{{ instance_dns_name }};
+    }
+    {% endif %}
+
+    {% if dx_valkyrie %}
+    location ^~/lab-partner {
+      include proxy_params;
+      proxy_pass $upstream_dx_valkyrie;
+    }
+    {% endif %}
+
+    {% if dx_ui_desktop and dx_ui_mobile %}
+    location ^~ /dx-static/desktop/dist/ {
+      proxy_pass $upstream_dx_ui_desktop;
+      include proxy_params;
+    }
+
+    location ^~ /dx-static/mobile/dist/ {
+      proxy_pass $upstream_dx_ui_mobile;
+      include proxy_params;
+    }
+
+    location /tests/amp/ {
+      proxy_set_header IS-MOBILE-REQUEST $fabric_is_mobile;
+      include proxy_params;
+      proxy_pass $upstream_dx_ui_mobile;
+    }
+
+    location /labs/amp/ {
+      proxy_set_header IS-MOBILE-REQUEST $fabric_is_mobile;
+      include proxy_params;
+      proxy_pass $upstream_dx_ui_mobile;
+    }
+
+    location ^~ /health-checkup-packages/amp/ {
+      proxy_set_header IS-MOBILE-REQUEST $fabric_is_mobile;
+      include proxy_params;
+      proxy_pass $upstream_dx_ui_mobile;
+    }
+
+    location ^~ /tests {
+        include proxy_params;
+
+        # use desktop
+        if ($fabric_is_mobile = 0) {
+          proxy_pass $upstream_dx_ui_desktop;
+        }
+
+        # use mweb
+        if ($fabric_is_mobile = 1) {
+          proxy_pass $upstream_dx_ui_mobile;
+        }
+    }
+
+    location = /labs/mobile/status {
+        include proxy_params;
+        proxy_pass $upstream_dx_ui_mobile;
+    }
+    location = /labs/desktop/status {
+        include proxy_params;
+        proxy_pass $upstream_dx_ui_desktop;
+    }
+
+    location ^~ /labs {
+        include proxy_params;
+
+        # use desktop
+        if ($fabric_is_mobile = 0) {
+          proxy_pass $upstream_dx_ui_desktop;
+        }
+
+        # use mweb
+        if ($fabric_is_mobile = 1) {
+          proxy_pass $upstream_dx_ui_mobile;
+        }
+    }
+
+    location ^~/health-checkup-packages {
+        include proxy_params;
+
+        # use desktop
+        if ($fabric_is_mobile = 0) {
+            proxy_pass $upstream_dx_ui_desktop;
+        }
+
+        # use mweb
+        if ($fabric_is_mobile = 1) {
+            proxy_pass $upstream_dx_ui_mobile;
+        }
+    }
+
+    location /dvapi/ {
+        include proxy_params;
+
+        # use desktop
+        if ($fabric_is_mobile = 0) {
+          proxy_pass $upstream_dx_ui_desktop;
+        }
+
+        # use mweb
+        if ($fabric_is_mobile = 1) {
+          proxy_pass $upstream_dx_ui_mobile;
+        }
+    }
+
+    {% endif %}
+
+    # Redirect to Dentist Listing
+    location = /redirect-listing/dentist {
+      return 301 https://www-{{ instance_name }}.practodev.com/$geoip_city/dentist;
+    }
+
+    {% if sapphire %}
+
+    location = /sapphire-worker.js {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+    location ~ ^/sapphire-api/.*$ {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+
+    location ~ ^/health-wiki {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+
+    location ~ ^/sapphire-widgets {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+
+    location ~ ^/sapphire-assets {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+
+    location = /sapphire-status-check {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+
+    location ~* ^/((id-id|pt-br|es-mx|en)/)?([^/]+/)?[^/]+/(doctor|therapist|technician|dokter|médico|klinik|clínica|rumah-sakit)/[^/]+/amp$ {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+
+    # Campaign Page
+    location ~* ^/campaign(/[^/]+)?$ {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+    location ~* ^/(caresurgeries|campaign)/([^/]+/)?[^/]+/amp$ {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+
+    location ~ ^/((id-id|pt-br|en-id|en|es-mx)/)?appointment/reschedule {
+      include proxy_params;
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+    }
+
+    # Centralized Lead Gen Page
+    location = /lead/pcs {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+
+    {% endif %}
+
+    # Opening establishment feedback page on Topaz 
+    location  ~* ^/[^/]+/(clinic|hospital)/[^/]+/feedback$ {
+      {% if topaz %}
+        include proxy_params;
+        proxy_pass $upstream_topaz;
+      {% endif %}
+    }
+
+    
+    # Mweb & Dweb: Clinic and Hospital Page URLs for doctors, recent, insurances, recommended, services ,amp, faq, and other centers
+    location  ~* ^/[^/]+/(clinic|hospital)/[^/]+/(doctors|recent|insurances|recommended|services|reviews|amp|faq|other-centers)$ {
+      include proxy_params;
+
+      {% if sapphire %}
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+      {% endif %}
+
+      {% if topaz %}
+      if ($fabric_is_sapphire = 0) {
+        proxy_pass $upstream_topaz;
+      }
+      {% endif %}
+    }
+
+    # Clinic and Hospital Profile URL & establishment speciality page URL
+    # 
+    # OVERVIEW: This location handles establishment profile pages for both consumer_ui and topaz flows.
+    #
+    # CONSUMER UI FLOW (SSG with S3 fallback to SSR):
+    # - For consumer_ui with Sapphire: Rewrites to named location @__s3_establishment_profile
+    #   - Named location proxies to S3 for pre-generated static HTML files
+    #   - Uses named location to avoid nginx if-block limitations for proxy_set_header Host
+    #   - On S3 404 (file not generated yet, or generation failed): Falls back to Next.js SSR via @establishment_profile_fallback
+    #   - Sets SERVED-FROM header indicating S3(SSG) or NEXT(SSR)
+    #   - Sets S3-URL header with the S3 URL that was attempted
+    #
+    # TOPAZ FLOW (direct proxy):
+    # - For topaz: Direct proxy to topaz upstream
+    # - On 404: Returns 404 directly to client (does NOT fallback to consumer_ui)
+    # - No error_page set, so fallback location is never called
+    #
+    # NAMED LOCATIONS:
+    # - @__s3_establishment_profile: Proxies requests to S3 with proper Host header for virtual-hosted bucket routing
+    #   - Only called from consumer_ui flow via rewrite with 'last' flag
+    #   - Sets error_page 404 to @establishment_profile_fallback
+    # - @establishment_profile_fallback: Handles S3 404s, routes to Next.js SSR
+    #   - Only called from consumer_ui S3 flow (topaz never reaches this)
+    #
+    # HEADERS:
+    # - Add SERVED-FROM and S3-URL for debugging and monitoring
+    # - These apply to all requests when consumer_ui is enabled (may have empty values for topaz)
+    #
+    location ~* ^/([^/]+)/(clinic|hospital)/([^/]+)(/[^/]+)?$ {
+      include proxy_params;
+
+      {% if consumer_ui %}
+      # Extract variables from URL regex captures: city ($1), type ($2), slug ($3)
+      # $4 is optional path (ignored for S3 paths)
+      set $consumer_ui_city $1;
+      set $consumer_ui_profile_type $2;
+      set $consumer_ui_slug $3;
+
+      # S3 configuration (LocalStack for staging, AWS S3 for production)
+      # Production AWS config (commented):
+      # set $consumer_ui_s3_bucket "practo-dev-mumbai-static-apps";
+      # set $consumer_ui_s3_endpoint "s3.ap-south-1.amazonaws.com";
+      # Staging LocalStack config:
+      set $consumer_ui_s3_bucket "localstack-bucket";
+      set $consumer_ui_s3_endpoint "localhost:4566";
+      set $consumer_ui_s3_folder_name "consumer-ui/export-assets";
+      
+      # Build S3 URL and track source
+      set $consumer_ui_s3_url "http://$consumer_ui_s3_endpoint/$consumer_ui_s3_bucket/$consumer_ui_s3_folder_name/$consumer_ui_city/$consumer_ui_profile_type/$consumer_ui_slug.html";
+      set $consumer_ui_served_from "AWS(SSG)";
+      
+      # For Sapphire requests, rewrite to named location for S3 proxy
+      # Using 'last' flag to exit this location block and jump to @__s3_establishment_profile
+      # Named location approach avoids nginx if-block limitations for proxy_set_header Host
+      # Variables set above persist and are accessible in the named location
+      if ($fabric_is_sapphire = 1) {
+        rewrite ^ __s3_establishment_profile last;
+      }
+      {% endif %}
+      
+      # Proxy to topaz for non-Sapphire requests
+      {% if topaz %}
+      if ($fabric_is_sapphire = 0) {
+        proxy_pass $upstream_topaz;
+      }
+      {% endif %}
+    }
+
+    # Named location for S3 proxy - avoids if-block limitations
+    # Called via rewrite with 'last' flag from main location block
+    # All variables set in the calling location block are accessible here
+    # This allows proxy_set_header Host to work reliably (not in an if-block context)
+    location @__s3_establishment_profile {
+      internal;
+      
+      # Set Host header for S3 virtual-hosted bucket routing
+      # Must be set to bucket name for virtual-hosted bucket requests
+      proxy_set_header Host $consumer_ui_s3_bucket;
+      proxy_set_header X-Real-IP $remote_addr;
+      include proxy_params;
+      
+      # Rewrite to S3 path with .html extension
+      # Using 'break' flag to stop rewrite processing and continue with proxy_pass
+      rewrite ^ /$consumer_ui_s3_folder_name/$consumer_ui_city/$consumer_ui_profile_type/$consumer_ui_slug.html break;
+      
+      # Error handling for S3 404s
+      proxy_intercept_errors on;
+      error_page 404 = @establishment_profile_fallback;
+      
+      # Proxy to S3 endpoint
+      proxy_pass http://$consumer_ui_s3_endpoint;
+      
+      # Add headers to track S3-served content
+      add_header SERVED-FROM $consumer_ui_served_from always;
+      add_header S3-URL $consumer_ui_s3_url always;
+    }
+
+    # Fallback location for establishment profile 404s from S3
+    # Only called from consumer_ui flow when S3 returns 404 (file not found)
+    # The named location @__s3_establishment_profile sets error_page 404 to this fallback
+    # Topaz flow never calls this - it directly proxies and returns 404s to client
+    location @establishment_profile_fallback {
+      internal;
+      
+      {% if consumer_ui %}
+      # Consumer UI: Fallback to Next.js SSR when S3 returns 404
+      # This handles cases where static files haven't been generated yet or generation failed
+      if ($fabric_is_sapphire = 1) {
+        set $consumer_ui_served_from "NEXT(SSR)";
+        proxy_pass $upstream_consumer_ui;
+        
+        # Add headers to indicate source is Next.js SSR
+        add_header SERVED-FROM $consumer_ui_served_from always;
+        add_header S3-URL $consumer_ui_s3_url always;
+      }
+      {% endif %}
+    }
+
+    # Consumer UI Routes
+    {% if consumer_ui %}
+    location ^~ /consumer-ui/ {
+      include proxy_params;
+      proxy_pass $upstream_consumer_ui;
+    }
+
+    location ~* /ai-consult-story {
+      include proxy_params;
+      proxy_pass $upstream_consumer_ui;
+    }
+
+    # Handle fallback URL to serve the request from consumer-ui upstream
+    location ^~ /consumer_ui_fallback/ {
+      # Informs nginx config that this block is for internal usage only. It won't be accesible from outside
+      internal;
+      
+      include proxy_params;
+      rewrite ^/consumer_ui_fallback(/.*)$ /$1 break;
+      proxy_pass $upstream_consumer_ui;
+    }
+
+    # Assets for consumer-ui established profile pages served from S3 bucket
+    # location ~ ^/consumer-ui-assets/(?P<path>.*) {
+    location ~ ^/localstack-bucket/consumer-ui/export-assets/(?P<path>.*) {
+      #resolver 8.8.8.8;
+      
+      # S3 configuration (LocalStack for staging, AWS S3 for production)
+      # Production AWS config (commented):
+      # set $consumer_ui_s3_bucket "practo-dev-mumbai-static-apps";
+      # set $consumer_ui_s3_endpoint "s3.ap-south-1.amazonaws.com";
+      # Staging LocalStack config:
+      set $consumer_ui_s3_bucket "localstack-bucket";
+      set $consumer_ui_s3_endpoint "localhost:4566";
+      set $consumer_ui_s3_folder_name "consumer-ui/export-assets";
+      
+      # Note: proxy_set_header Host may be required for S3 virtual-hosted bucket routing
+      # proxy_set_header Host $consumer_ui_s3_bucket;
+      
+      # Build the full URL for proxy_pass
+      set $full_url http://$consumer_ui_s3_endpoint/$consumer_ui_s3_bucket/$consumer_ui_s3_folder_name/$path;
+      proxy_pass $full_url;
+    }
+    
+    {% endif %}
+
+
+    {% if static_page_creator %}
+
+    location ^~ /static-page-creator/api/ {
+      include proxy_params;
+      proxy_pass $upstream_static_page_creator;
+    }
+
+    location  ^~ /static-page-creator/preview/ {
+      include proxy_params;
+      proxy_pass $upstream_static_page_creator;
+    }
+
+    location ~* ^/care-surgeries/(?P<path>.*?)/?$ {
+      proxy_pass https://practo-dev-mumbai-static-apps.s3.ap-south-1.amazonaws.com/static-page-creator-assets/care-surgeries/$path/index.html;
+    }
+
+    location = /care {
+      include proxy_params;
+
+      # Care Brand Page Mweb
+      if ($fabric_is_sapphire = 1) {
+        rewrite ^ /care/mweb last;
+      }
+
+      # Care Brand Page Dweb
+      if ($fabric_is_sapphire = 0) {
+        rewrite ^ /care/dweb last;
+      }
+    }
+
+    location = /care/mweb {
+      include proxy_params;
+      proxy_pass $upstream_static_page_creator;
+    }
+
+    location = /care/dweb {
+      include proxy_params;
+      proxy_pass $upstream_static_page_creator;
+    }
+
+    #Proxy for App Build(JS, CSS, HTML)
+    location ~* ^/static-page-creator-s3-assets/(?P<path>.*) {
+      proxy_pass https://practo-dev-mumbai-static-apps.s3.ap-south-1.amazonaws.com/static-page-creator-assets/$path;
+    }
+
+    #Proxy for App Build(JS, CSS, HTML)
+    location ~* ^/static-page-creator-server-assets/ {
+      include proxy_params;
+      proxy_pass $upstream_static_page_creator;
+      
+    }
+
+    {% endif %}
+
+    {% if nav %}
+      location ^~ /nav {
+        include proxy_params;
+        rewrite ^/nav/(.*) /$1 break;
+        proxy_pass $upstream_nav;
+      }
+    {% endif %}
+
+    {% if fabric %}
+    location ~* ^/health/ {
+      include proxy_params;
+        proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location = /login {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+    {% endif %}
+
+    # consumer home
+    {% if consumer_home_mweb or consumer_home_desktop %}
+      location = / {
+        rewrite / /consumer-home last;
+      }
+      
+      {% if consumer_home_mweb %}
+      location = /care-v1 {
+        rewrite /(.*) /consumer-home/$1 last;
+      }
+
+      location ^~ /care-v1/ {
+        rewrite /(.*) /consumer-home/$1 last;
+      }
+      {% endif %}
+      
+      location = /doctors {
+        include proxy_params;
+        if ($fabric_is_sapphire = 0) {
+          {% if fabric %}
+          rewrite /doctors / break;
+          proxy_pass $upstream_fabric_k8s_nginx;
+          {% endif %}
+        }
+        {% if sapphire %}
+        if ($fabric_is_sapphire = 1) {
+          proxy_pass $upstream_sapphire_app;
+        }
+        {% endif %}
+      }
+      location = /webpush-service-worker.js {
+        rewrite /(.*) /consumer-home/assets/$1 last;
+      }
+      location = /consumer-home {
+        include proxy_params;
+
+        {% if consumer_home_mweb %}
+          if ($fabric_is_sapphire = 1) {
+            proxy_pass $upstream_consumer_home_mweb;
+          }
+        {% endif %}
+
+        {% if consumer_home_desktop %}
+           if ($fabric_is_sapphire = 0) {
+            proxy_pass $upstream_consumer_home_desktop;
+          }
+        {% endif %}
+      }
+      {% if consumer_home_mweb %}
+      location = /consumer-home-mweb-status {
+        include proxy_params;
+        proxy_pass $upstream_consumer_home_mweb;
+      }
+      {% endif %}
+      {% if consumer_home_desktop %}
+      location = /consumer-home-dweb-status {
+        include proxy_params;
+        proxy_pass $upstream_consumer_home_desktop;
+      }
+      {% endif %}
+      location ^~ /consumer-home/ {
+        {% if consumer_home_mweb %}
+        location = /consumer-home/care {
+          include proxy_params;
+          proxy_pass $upstream_consumer_home_mweb;
+        }
+        location ^~ /consumer-home/care/ {
+          include proxy_params;
+          proxy_pass $upstream_consumer_home_mweb;
+        }
+        {% endif %}
+        include proxy_params;
+
+        {% if consumer_home_mweb %}
+          if ($fabric_is_sapphire = 1) {
+            proxy_pass $upstream_consumer_home_mweb;
+          }
+        {% endif %}
+
+        {% if consumer_home_desktop %}
+           if ($fabric_is_sapphire = 0) {
+            proxy_pass $upstream_consumer_home_desktop;
+          }
+        {% endif %}
+      }
+    {% endif %}
+
+    # space ui
+    {% if space_ui %}
+    location ^~ /space-ui/assets {
+      rewrite ^/space-ui/assets(.*)$ $1 break;
+      include proxy_params;
+      proxy_pass $upstream_space_ui;
+    }
+    {% endif %}
+
+    {% if sapphire or topaz %}
+
+    # -----------------------------------------------------------------------
+
+    # Coronavirus Page
+    location = /coronavirus {
+      include proxy_params;
+      proxy_pass $upstream_topaz;
+    }
+
+    # Coronavirus Practeon Page
+    location = /coronavirus/practeon {
+      include proxy_params;
+      proxy_pass $upstream_topaz;
+    }
+
+    # India Health Hour Page
+    location = /coronavirus/indiahealthhour {
+      include proxy_params;
+      proxy_pass $upstream_topaz;
+    }
+
+    # Profile Feedback: /:locale?/:country?/:city/:doctor_type/:profile_slug/(feedback|external-feedback)
+    location ~* ^/((id-id|pt-br|en-id|en|es-mx)/)?((india|singapore|philippines|indonesia|brazil)/)?[^/]+/(doctor|therapist|technician|dokter|médico|hospital|clinic|medical-center)/[^/]+/(feedback|external-feedback)/?$ {
+      include proxy_params;
+
+      # use fabric
+      if ($fabric_is_sapphire = 0) {
+        {% if fabric %}
+        proxy_pass $upstream_fabric_k8s_nginx;
+        {% endif %}
+      }
+
+      # use topaz
+      {% if topaz %}
+      if ($fabric_is_topaz = 1) {
+        proxy_pass $upstream_topaz;
+      }
+      {% endif %}
+
+      {% if sapphire %}
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+      {% endif %}
+    }
+
+    # HomePage: /:locale?
+    location ~* ^/(id-id|pt-br|en-id|en|es-mx)?/?$ {
+      include proxy_params;
+
+      # use fabric
+      if ($fabric_is_sapphire = 0) {
+        {% if fabric %}
+        proxy_pass $upstream_fabric_k8s_nginx;
+        {% endif %}
+      }
+
+      # use sapphire
+      {% if sapphire %}
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+      {% endif %}
+    }
+
+    {% if dx %}
+    location = /covid-test {
+      return 301 https://www-{{ instance_name }}.practodev.com/health-checkup-packages/covid-19-sars-cov-2-detection/p;
+    }
+    {% endif %}
+
+     # Fabric Listing Page: /:locale?/search
+    location ~* ^/((id-id|pt-br|en-id|en|es-mx)/)?search/?$ {
+      include proxy_params;
+
+      # use fabric
+      if ($fabric_is_sapphire = 0) {
+        {% if fabric %}
+        proxy_pass $upstream_fabric_k8s_nginx;
+        {% endif %}
+      }
+
+      # use topaz
+      {% if topaz %}
+      if ($fabric_is_topaz = 1) {
+        proxy_pass $upstream_topaz;
+      }
+      {% endif %}
+
+      # use sapphire
+      {% if sapphire %}
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+      {% endif %}
+    }
+
+    # Covid hospital listing
+    location ~* ^/((id-id|pt-br|en-id|en|es-mx)/)?([^/]+/)covid-hospital-listing(/[^/]+)?$ {
+      include proxy_params;
+
+      proxy_pass $upstream_sapphire_app;
+    }
+
+    # Global support chat page
+    location ^~ /support/chat {
+      include proxy_params;
+      proxy_pass $upstream_sapphire_app;
+    }
+
+    # Oneword: Treatment Mashup, Speciality Mashup, Country, City:  /:locale?/:oneword
+    # City landing:                                                 /:locale?/:country?/:city
+    location ~* ^/((id-id|pt-br|en-id|en|es-mx)/)?((india|singapore|philippines|indonesia|brazil)/)?([^/]+)/?$ {
+      include proxy_params;
+
+      # use fabric
+      if ($fabric_is_sapphire = 0) {
+        {% if fabric %}
+        proxy_pass $upstream_fabric_k8s_nginx;
+        {% endif %}
+      }
+
+      # use sapphire
+      {% if sapphire %}
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+      {% endif %}
+    }
+
+    # My doctors: /:locale?/doctors/managemydoctors
+    location ~* ^/((id-id|pt-br|en-id|en|es-mx)/)?doctors/managemydoctors/?$ {
+      include proxy_params;
+
+      # use fabric
+      if ($fabric_is_sapphire = 0) {
+        {% if fabric %}
+        proxy_pass $upstream_fabric_k8s_nginx;
+        {% endif %}
+      }
+
+      # use sapphire
+      {% if sapphire %}
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+      {% endif %}
+    }
+
+    # Clinic Microsite: /:locale?/:clinic_slug/doctor/:id(\\d+)/:doctor_slug
+    location ~* ^/((id-id|pt-br|en-id|en|es-mx)/)?([^/]+/)doctor/[\d]+/([^/]+)/?$ {
+      include proxy_params;
+
+      # use fabric
+      if ($fabric_is_sapphire = 0) {
+        {% if fabric %}
+        proxy_pass $upstream_fabric_k8s_nginx;
+        {% endif %}
+      }
+
+      # use sapphire
+      {% if sapphire %}
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+      {% endif %}
+    }
+
+
+    # Establishment Listing & Profile
+    # Listing: /:locale?/:country?/:city/:establishment_type/:search_value?/:locality?
+    # Profile: /:locale?/:country?/:city/:establishment_type/:slug
+    location ~* ^/((id-id|pt-br|en-id|es-mx|en)/)?((india|singapore|philippines|indonesia|brazil)/)?[^/]+/(wellness-centers|spa|spa-therapist|beautician|saloon|gyms|spas-salons|fitness-centers|spas-salons-all|wellness-center|spa-salon|fitness-center|gym|medical-center)(/[^/]+)?(/[^/]+)?/?$ {
+      include proxy_params;
+
+      # use fabric
+      if ($fabric_is_sapphire = 0) {
+        {% if fabric %}
+        proxy_pass $upstream_fabric_k8s_nginx;
+        {% endif %}
+      }
+
+      # use sapphire
+      {% if sapphire %}
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+      {% endif %}
+    }
+
+    # Optional Establishment Listing & Profile
+    # Listing: /:locale?/:country?/:city/:search_value/:establishment_type/:locality?
+    # Profile: /:locale?/:country?/:city/:slug?/:establishment_type
+    location ~* ^/((id-id|pt-br|en-id|es-mx|en)/)?((india|singapore|philippines|indonesia|brazil)/)?[^/]+/[^/]+/(wellness-centers|spa|spa-therapist|beautician|saloon|gyms|spas-salons|fitness-centers|spas-salons-all|wellness-center|spa-salon|fitness-center|gym|medical-center)(/[^/]+)?/?$ {
+      include proxy_params;
+
+      # use fabric
+      if ($fabric_is_sapphire = 0) {
+        {% if fabric %}
+        proxy_pass $upstream_fabric_k8s_nginx;
+        {% endif %}
+      }
+
+      # use sapphire
+      {% if sapphire %}
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+      {% endif %}
+    }
+
+    # Match everything else and try serving it from web
+    location / {
+      include proxy_params;
+
+      # use fabric
+      if ($fabric_is_sapphire = 0) {
+        {% if fabric %}
+        proxy_pass $upstream_fabric_k8s_nginx;
+        {% endif %}
+      }
+
+      # use topaz
+      {% if topaz %}
+      if ($fabric_is_topaz = 1) {
+        proxy_pass $upstream_topaz;
+      }
+      {% endif %}
+
+      # use sapphire
+      {% if sapphire %}
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass $upstream_sapphire_app;
+      }
+      {% endif %}
+    }
+
+    # -----------------------------------------------------------------------------------------
+    {% elif  fabric %}
+    location / {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location = /logout {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location ~ ^/city/.*$ {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+
+    location = /health/verify/mobile {
+      include proxy_params;
+      proxy_pass $upstream_fabric_k8s_nginx;
+    }
+    {% endif %}
+
+    {% if transaction_store %}
+    location = /affiliate-home {
+      proxy_set_header Host growth-{{ instance_name }}.practodev.com;
+
+      # For desktop view
+      if ($fabric_is_sapphire = 0) {
+        return 301 https://www-{{ instance_name }}.practodev.com;
+      }
+
+      # For mobile view
+      if ($fabric_is_sapphire = 1) {
+        proxy_pass http://{{ transaction_store }};
+      }
+    }
+    {% endif %}
+}
+{% elif subdomain == 'ray' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl http2;
+
+    {% if catalog_api %}
+    set $upstream_catalog_api http://{{ catalog_api }};
+    {% endif %}
+    {% if ray_audits %}
+    set $upstream_ray_audits http://{{ ray_audits }};
+    {% endif %}
+
+    {% if catalog_api %}
+    location ~ ^/api/catalog(?P<ray_api_catalog_path>.*)$ {
+        include proxy_params;
+        proxy_pass $upstream_catalog_api$ray_api_catalog_path$is_args$args;
+    }
+    {% endif %}
+    {% if ray_audits %}
+    location ~ ^/api/logs(?P<ray_audits_path>.*)$ {
+        include proxy_params;
+        proxy_pass $upstream_ray_audits$ray_audits_path$is_args$args;
+    }
+    {% endif %}
+    {% if ray_api %}
+    set $upstream_ray_api {{ ray_api[1] }};
+    location /staging-factory-practo-resources/ {
+        internal;
+        proxy_pass https://s3-ap-southeast-1.amazonaws.com;
+    }
+    location /staging-factory-mumbai-practo-resources/ {
+        rewrite ^/staging-factory-mumbai-practo-resources/(.*)$ /$1 break;
+        internal;
+        proxy_pass https://staging-factory-mumbai-practo-resources.s3.ap-south-1.amazonaws.com;
+    }
+
+    location ~ ^/api/v1/patients/(\d+)/photo$ {
+      rewrite ^/api/v1(?P<ray_api_path_latest>.*)$ $ray_api_path_latest break;
+
+      root /app/web;
+      include fastcgi_params;
+      include fastcgi_params2;
+      fastcgi_index /app.php;
+      fastcgi_param PATH_INFO $ray_api_path_latest;
+      fastcgi_param SCRIPT_FILENAME $document_root/app.php;
+      fastcgi_param SCRIPT_NAME $ray_api_path_latest;
+      fastcgi_param REQUEST_URI $ray_api_path_latest;
+      fastcgi_param DOCUMENT_URI $ray_api_path_latest;
+      fastcgi_connect_timeout 500ms;
+      fastcgi_read_timeout 300s;
+      fastcgi_pass $upstream_ray_api;
+    }
+
+    location ~ ^/api/v1(?P<ray_api_path_latest>.*)$ {
+      root /app/web;
+
+      set $location $ray_api_path_latest;
+      include fastcgi_params;
+      include fastcgi_params2;
+      fastcgi_index /app.php;
+      fastcgi_param PATH_INFO $ray_api_path_latest;
+      fastcgi_param SCRIPT_FILENAME $document_root/app.php;
+      fastcgi_param SCRIPT_NAME $ray_api_path_latest;
+      fastcgi_param REQUEST_URI $ray_api_path_latest;
+      fastcgi_param DOCUMENT_URI $ray_api_path_latest;
+      fastcgi_connect_timeout 500ms;
+      fastcgi_read_timeout 300s;
+      fastcgi_pass $upstream_ray_api;
+    }
+    {% endif %}
+
+    {% if ray_app %}
+    set $upstream_ray_app http://{{ ray_app }};
+
+    location / {
+        include proxy_params;
+        proxy_pass $upstream_ray_app;
+    }
+    {% endif %}
+}
+
+{% elif subdomain == 'payments' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl http2;
+
+    set $upstream_consumer_payments_web http://{{ consumer_payments_web }};
+    {% if consumer_payments_api_rails %}
+    set $payments_api_rails http://{{ consumer_payments_api_rails }};
+    {% else %}
+    set $payments_api_rails https://{{ instance_dns_name }};
+    {% endif %}
+
+    location = /login {
+        include proxy_params;
+        proxy_pass $payments_api_rails;
+    }
+
+    location = /payments/request {
+        include proxy_params;
+        {% if consumer_payments_api_rails %}
+        proxy_pass $payments_api_rails/v2$request_uri;
+        {% else %}
+        proxy_pass $payments_api_rails;
+        {% endif %}
+    }
+
+    location = /_remote_logout {
+        include proxy_params;
+        proxy_pass $payments_api_rails;
+    }
+
+    location ^~ /v2/ {
+        include proxy_params;
+        proxy_pass $payments_api_rails;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_set_header X-Request-Start "t=${msec}";
+        proxy_pass $upstream_consumer_payments_web;
+    }
+}
+{% elif subdomain == 'paymentsapi' %}
+server {
+    server_name paymentsapi-{{ instance_name }}.practodev.com;
+    listen 443 ssl http2;
+
+    {% if consumer_payments_api_rails %}
+    set $payments_api_rails http://{{ consumer_payments_api_rails }};
+    {% endif %}
+
+    location / {
+        include proxy_params;
+        proxy_set_header X-Request-Start "t=${msec}";
+        proxy_pass $payments_api_rails;
+    }
+}
+
+server {
+    server_name paymentsapi2-{{ instance_name }}.practodev.com;
+    listen 443 ssl http2;
+
+    {% if consumer_payments_api_rails %}
+    set $payments_api_rails http://{{ consumer_payments_api_rails }};
+    {% endif %}
+
+    location / {
+        include proxy_params;
+        proxy_set_header X-Request-Start "t=${msec}";
+        proxy_pass $payments_api_rails;
+    }
+}
+{% elif subdomain == 'diagnostics' %}
+server {
+    server_name diagnostics-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    {% if dx %}
+    set $upstream_dx http://{{ dx }};
+    {% endif %}
+
+
+    {% if dx %}
+        location / {
+            include proxy_params;
+            proxy_pass $upstream_dx;
+        }
+    {% endif %}
+}
+{% elif subdomain == 'dose' %}
+server {
+    server_name dose-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    {% if dose_api %}
+    set $upstream_dose_api http://{{ dose_api }};
+    {% endif %}
+    {% if pharma_remedy_ui %}
+    set $upstream_pharma_remedy_ui http://{{ pharma_remedy_ui }};
+    {% else %}
+    set $upstream_pharma_remedy_ui https://{{ instance_dns_name }};
+    {% endif %}
+    {% if pharma_nucleus %}
+    set $upstream_pharma_nucleus http://{{ pharma_nucleus }};
+    {% endif %}
+    {% if rx_communicationengine %}
+    set $upstream_rx_communicationengine http://{{ rx_communicationengine }};
+    {% endif %}
+    {% if rx_tatengine %}
+    set $upstream_rx_tatengine http://{{ rx_tatengine }};
+    {% endif %}
+    {% if rx_integration_service %}
+    set $upstream_rx_integration_service http://{{ rx_integration_service }};
+    {% endif %}
+
+    {% if dose_api %}
+        location / {
+            include proxy_params;
+            proxy_pass $upstream_dose_api;
+        }
+    {% endif %}
+    location /remedy {
+        {% if pharma_remedy_ui %}
+        rewrite ^/remedy/(.*)$ /$1 break;
+        {% endif %}
+        include proxy_params;
+        proxy_pass $upstream_pharma_remedy_ui;
+    }
+    {% if pharma_nucleus %}
+        location /nucleus {
+            rewrite ^/nucleus/(.*)$ /$1 break;
+            include proxy_params;
+            proxy_pass $upstream_pharma_nucleus;
+        }
+    {% endif %}
+    {% if rx_communicationengine %}
+        location /commengine {
+            rewrite ^/commengine/(.*)$ /$1 break;
+            include proxy_params;
+            proxy_pass $upstream_rx_communicationengine;
+        }
+    {% endif %}
+    {% if rx_tatengine %}
+        location /tatengine {
+            rewrite ^/tatengine/(.*)$ /$1 break;
+            include proxy_params;
+            proxy_pass $upstream_rx_tatengine;
+        }
+    {% endif %}
+    {% if rx_integration_service %}
+        location /integration-service {
+            rewrite ^/integration-service/(.*)$ /$1 break;
+            include proxy_params;
+            proxy_pass $upstream_rx_integration_service;
+        }
+    {% endif %}
+}
+{% elif subdomain == 'accounts' and accounts %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    set $upstream_accounts_0 http://{{ accounts[0] }};
+    set $upstream_accounts_1 {{ accounts[1] }};
+
+
+    location /profile_picture/ {
+        error_page 404 403 =200 /static/images/profile.png;
+        rewrite ^/profile_picture/(.*)$ /$1 break;
+        proxy_pass https://staging-factory-practo-accounts.s3-ap-southeast-1.amazonaws.com;
+        proxy_intercept_errors on;
+    }
+
+    location /static {
+        proxy_pass $upstream_accounts_0;
+    }
+
+    location = /.well-known/apple-app-site-association {
+        rewrite ^ /apple-app-site-association last;
+    }
+
+    location = /apple-app-site-association {
+        rewrite ^(.*)$ /app/staging$1 break;
+        proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+        proxy_pass https://staging-factory-practo-accounts.s3-ap-southeast-1.amazonaws.com;
+        proxy_intercept_errors on;
+    }
+
+    location /payment/static {
+        proxy_pass $upstream_accounts_0;
+    }
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass $upstream_accounts_1;
+    }
+}
+{% elif subdomain == 'epicenter' %}
+server {
+    server_name epicenter-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    {% if client_api %}
+    set $upstream_client_api http://{{ client_api }};
+    {% endif %}
+    {% if reach_internal_cpm %}
+    set $upstream_reach_internal_cpm http://{{ reach_internal_cpm }};
+    {% endif %}
+    {% if epicenter_api %}
+    set $upstream_epicenter_api http://{{ epicenter_api }};
+    {% endif %}
+    {% if internal_feedback %}
+    set $upstream_internal_feedback http://{{ internal_feedback }};
+    {% endif %}
+    {% if fabric %}
+    set $upstream_fabric_k8s_nginx http://{{ fabric }};
+    {% endif %}
+
+    location / {
+        include proxy_params;
+        proxy_pass https://{{instance_dns_name}};
+    }
+    location ~ \.[0-9]+\.(css|js)$ {
+      rewrite ^(.*)\.[0-9]+\.(css|js)$ $1.$2 last;
+    }
+    {% if reach_internal_cpm %}
+    location /reach/internal-cpm {
+        include proxy_params;
+        rewrite ^/reach/internal-cpm(.*)$ /$1 break;
+        proxy_pass $upstream_reach_internal_cpm;
+    }
+    {% endif %}
+    {% if client_api %}
+    location ^~ /client-auth/ {
+        include proxy_params;
+        proxy_pass $upstream_client_api;
+    }
+    location ^~ /client-api/ {
+        include proxy_params;
+        proxy_pass $upstream_client_api;
+    }
+    {% endif %}
+    {% if epicenter_api %}
+    location /api/v1 {
+        rewrite ^/api/v1/(.*)$ /$1 break;
+        include proxy_params;
+        proxy_pass $upstream_epicenter_api;
+    }
+    {% endif %}
+    {% if internal_feedback %}
+    location /feedback/internal {
+        include proxy_params;
+        rewrite ^/feedback/internal/(.*)$ /$1 break;
+        proxy_pass $upstream_internal_feedback;
+    }
+    {% endif %}
+    {% if fabric %}
+      location = /manifest.json {
+        include proxy_params;
+        proxy_pass $upstream_fabric_k8s_nginx;
+      }
+
+      location ~ ^/wave/(.*)$ {
+        rewrite ^/wave/(.*)$ /wave/$1 break;
+        proxy_pass $upstream_fabric_k8s_nginx;
+        proxy_set_header Host www-{{instance_name}}.practodev.com;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+
+      location ~ ^/fabric-api/subscriptions/(.*)$ {
+        rewrite ^/fabric-api/subscriptions(.*)$ /health/api/subscriptions$1 break;
+        # update with url of fabric instance
+        proxy_pass $upstream_fabric_k8s_nginx;
+        proxy_set_header Host www-{{instance_name}}.practodev.com;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+      location ~ ^/fabric-api/(.*)$ {
+        rewrite ^/fabric-api/(.*)$ /health/core-api/$1 break;
+        proxy_pass $upstream_fabric_k8s_nginx;
+        proxy_set_header Host www-{{instance_name}}.practodev.com;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+    {% endif %}
+}
+{% elif subdomain == 'nav' %}
+server {
+    server_name nav-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    {% if nav %}
+    set $upstream_nav http://{{ nav }};
+    {% else %}
+    set $upstream_nav https://{{instance_dns_name}};
+    {% endif %}
+
+    location / {
+        include proxy_params;
+        proxy_pass $upstream_nav;
+    }
+}
+{% elif subdomain == 'todocards' %}
+server {
+  server_name todocards-{{ instance_name }}.practodev.com;
+  listen 443 ssl;
+
+  {% if todo_cards %}
+  set $upstream_todocards http://{{ todo_cards }};
+  {% endif %}
+  location / {
+    include proxy_params;
+    proxy_set_header GEOIP-CITY $geoip_city;
+    proxy_set_header GEOIP-COUNTRY-CODE $geoip_country_code;
+    proxy_pass $upstream_todocards;
+  }
+}
+{% elif subdomain == 'drive' %}
+server {
+    server_name drive-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    set $upstream_drive http://{{ drive }};
+    set $upstream_genesis http://{{ genesis }};
+
+    location / {
+        include proxy_params;
+        proxy_pass $upstream_drive;
+    }
+    location  ~ ^/api(?P<genesis_api_path_info>/.*)$ {
+        include proxy_params;
+        proxy_pass $upstream_genesis$genesis_api_path_info$is_args$args;
+    }
+    {% if accounts %}
+    location = /user_exists {
+        include uwsgi_params;
+        uwsgi_param HTTP_HOST accounts-{{ instance_name }}.practodev.com;
+        uwsgi_param SERVER_NAME accounts-{{ instance_name }}.practodev.com;
+        uwsgi_pass {{ accounts[1] }};
+    }
+    {% else %}
+    location = /user_exists {
+        include proxy_params;
+        proxy_pass https://{{instance_dns_name}};
+    }
+    {% endif %}
+    location /staging-factory-practo-accounts/ {
+        proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+        proxy_pass https://s3-ap-southeast-1.amazonaws.com;
+        proxy_set_header Content-Type '';
+        internal;
+    }
+    location /genesis-mumbai-aux-bucket/ {
+      rewrite ^/genesis-mumbai-aux-bucket/(.*)$ /$1 break;
+      proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+      proxy_pass https://genesis-mumbai-aux-bucket.s3.ap-south-1.amazonaws.com;
+      proxy_set_header Content-Type '';
+      internal;
+    }
+}
+{% elif subdomain == 'genesis' %}
+server {
+    server_name genesis-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    set $upstream_genesis http://{{ genesis }};
+
+    location / {
+        include proxy_params;
+        proxy_pass $upstream_genesis;
+    }
+    location /staging-factory-practo-accounts/ {
+        proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+        proxy_pass https://s3-ap-southeast-1.amazonaws.com;
+        proxy_set_header Content-Type '';
+        internal;
+    }
+    location /genesis-mumbai-aux-bucket/ {
+      rewrite ^/genesis-mumbai-aux-bucket/(.*)$ /$1 break;
+      proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+      proxy_pass https://genesis-mumbai-aux-bucket.s3.ap-south-1.amazonaws.com;
+      proxy_set_header Content-Type '';
+      internal;
+    }
+}
+{% elif subdomain == 'feedback' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    set $upstream_feedback http://{{ feedback }};
+
+    location /wave/internal {
+        rewrite ^/wave/internal/(.+)$ /wave/$1 break;
+        include proxy_params;
+        proxy_pass $upstream_feedback;
+    }
+
+    location /internal/status {
+        rewrite ^/internal/status /status break;
+        include proxy_params;
+        proxy_pass $upstream_feedback;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass $upstream_feedback;
+    }
+}
+{% elif subdomain == 'sentry' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    location /oauth2/ {
+        proxy_pass http://localhost:4180;
+        include proxy_params;
+        proxy_set_header X-Auth-Request-Redirect "$scheme://$host$request_uri";
+    }
+
+    location = /oauth2/auth {
+        proxy_pass http://localhost:4180;
+        include proxy_params;
+        proxy_set_header Content-Length   "";
+        proxy_pass_request_body           off;
+    }
+
+    {% if sentry %}
+    set $upstream_sentry http://{{ sentry }};
+    location ~* ^/api/[0-9]+/store/$ {
+        include proxy_params;
+        proxy_pass $upstream_sentry;
+    }
+    location ~* ^/api/[0-9]+/security/$ {
+        include proxy_params;
+        proxy_pass $upstream_sentry;
+    }
+    location / {
+        satisfy any;
+        allow 172.16.0.0/12;
+        deny all;
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+
+        include proxy_params;
+        proxy_pass $upstream_sentry;
+    }
+    {% endif %}
+}
+{% elif subdomain == 'sentry9' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    location /oauth2/ {
+        proxy_pass http://localhost:4180;
+        include proxy_params;
+        proxy_set_header X-Auth-Request-Redirect "$scheme://$host$request_uri";
+    }
+
+    location = /oauth2/auth {
+        proxy_pass http://localhost:4180;
+        include proxy_params;
+        proxy_set_header Content-Length   "";
+        proxy_pass_request_body           off;
+    }
+
+    {% if sentry9 %}
+    set $upstream_sentry9 http://{{ sentry9 }};
+    location ~* ^/api/[0-9]+/store/$ {
+        include proxy_params;
+        proxy_pass $upstream_sentry9;
+    }
+    location ~* ^/api/[0-9]+/security/$ {
+        include proxy_params;
+        proxy_pass $upstream_sentry9;
+    }
+    location / {
+        satisfy any;
+        allow 172.16.0.0/12;
+        deny all;
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+
+        include proxy_params;
+        proxy_pass $upstream_sentry9;
+    }
+    {% endif %}
+}
+{% elif subdomain == 'elastic-apm' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    location /oauth2/ {
+        proxy_pass http://localhost:4180;
+        include proxy_params;
+        proxy_set_header X-Auth-Request-Redirect "$scheme://$host$request_uri";
+    }
+
+    location = /oauth2/auth {
+        proxy_pass http://localhost:4180;
+        include proxy_params;
+        proxy_set_header Content-Length   "";
+        proxy_pass_request_body           off;
+    }
+
+    {% if elastic_apm_kibana %}
+    set $upstream_elastic_apm_kibana http://{{ elastic_apm_kibana }};
+    location / {
+        satisfy any;
+        allow 172.16.0.0/12;
+        deny all;
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+
+        include proxy_params;
+        proxy_pass $upstream_elastic_apm_kibana;
+    }
+    {% endif %}
+}
+{% elif subdomain == 'beanstalk' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    location /oauth2/ {
+        proxy_pass http://localhost:4180;
+        include proxy_params;
+        proxy_set_header X-Auth-Request-Redirect "$scheme://$host$request_uri";
+    }
+
+    location = /oauth2/auth {
+        proxy_pass http://localhost:4180;
+        include proxy_params;
+        proxy_set_header Content-Length   "";
+        proxy_pass_request_body           off;
+    }
+
+    {% if beanstalk_console %}
+    set $upstream_beanstalk_console http://{{ beanstalk_console }};
+    location / {
+        satisfy any;
+        allow 172.16.0.0/12;
+        deny all;
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+
+        include proxy_params;
+        proxy_pass $upstream_beanstalk_console;
+    }
+    {% endif %}
+}
+{% elif subdomain == 'addons' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    {% if queue_status_ui %}
+    set $upstream_queue_status http://{{ queue_status_ui }};
+    {% endif %}
+    {% if dashboard %}
+    set $upstream_dashboard http://{{ dashboard }};
+    {% endif %}
+    {% if patient_portal %}
+    set $upstream_patient_portal http://{{ patient_portal }};
+    {% endif %}
+    {% if addon_api %}
+    set $upstream_addon_api http://{{ addon_api }};
+    {% endif %}
+
+    {% if dashboard %}
+    location = /dashboard {
+        include proxy_params;
+        proxy_pass $upstream_dashboard;
+    }
+
+    location ^~ /dashboard/ {
+        include proxy_params;
+        proxy_pass $upstream_dashboard;
+    }
+    {% endif %}
+    {% if patient_portal %}
+    location ^~ /widget/build/ {
+        include proxy_params;
+        proxy_pass $upstream_patient_portal;
+    }
+
+    location ^~ /widget/ {
+        include proxy_params;
+        proxy_pass $upstream_patient_portal;
+    }
+    {% endif %}
+    {% if queue_status_ui %}
+      location ^~ /queue-status/ {
+        include proxy_params;
+        proxy_pass $upstream_queue_status;
+      }
+    {% endif %}
+    {% if addon_api %}
+    location /api/ {
+        include proxy_params;
+        proxy_pass $upstream_addon_api;
+    }
+    {% endif %}
+}
+{% elif subdomain == 'subscriptions' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+    {% if subscriptions %}
+      set $upstream_subscriptions http://{{ subscriptions }};
+      location ^~ /api/v1/ {
+        rewrite ^/api/v1/(.*)$ /$1 last;
+      }
+      location / {
+        include proxy_params;
+        proxy_pass $upstream_subscriptions;
+      }
+    {% endif%}
+}
+{% elif subdomain == 'subscriptiontx' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+    {% if subscriptiontx %}
+      set $upstream_subscriptiontx http://{{ subscriptiontx }};
+      location ^~ /api/v1/ {
+        include proxy_params;
+        rewrite ^/api/v1/(.*)$ /$1 break;
+        proxy_pass $upstream_subscriptiontx;
+      }
+      location ~ /_service-auth/v3/dh-handshake-(1|2) {
+        include proxy_params;
+        proxy_pass $upstream_subscriptiontx;
+      }
+    {% endif%}
+}
+{% elif subdomain == 'plus' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+    {% if subscription_web %}
+      set $upstream_subscription_web http://{{ subscription_web }};
+
+      location ^~ /unlock {
+        include proxy_params;
+        proxy_pass $upstream_subscription_web;
+      }
+
+      location / {
+        include proxy_params;
+        proxy_pass $upstream_subscription_web;
+      }
+    {% endif%}
+}
+{% elif subdomain == 'mdscuration' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+    {% if mds_curation %}
+      set $upstream_mds_curation http://{{ mds_curation }};
+
+      location / {
+        include proxy_params;
+        proxy_pass $upstream_mds_curation;
+      }
+    {% endif%}
+}
+{% elif subdomain == 'consult' and consult_api %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    set $upstream_consult_api http://{{ consult_api }};
+
+    location ^~ /api/ {
+        rewrite ^/api/(.*)$ /$1 last;
+    }
+    location / {
+        include proxy_params;
+        proxy_pass $upstream_consult_api;
+    }
+}
+{% elif subdomain == 'stubber' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    set $upstream_stubber http://{{ qa_stubber }};
+
+    location / {
+        include proxy_params;
+        proxy_pass $upstream_stubber;
+    }
+}
+{% elif subdomain == 'openai' %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    location /oauth2/ {
+        proxy_pass http://localhost:4180;
+        include proxy_params;
+        proxy_set_header X-Auth-Request-Redirect "$scheme://$host$request_uri";
+    }
+
+    location = /oauth2/auth {
+        proxy_pass http://localhost:4180;
+        include proxy_params;
+        proxy_set_header Content-Length   "";
+        proxy_pass_request_body           off;
+    }
+
+    set $upstream_openai http://{{ openai }};
+
+    location / {
+        satisfy any;
+        allow 172.16.0.0/12;
+        deny all;
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+
+        include proxy_params;
+        proxy_pass $upstream_openai;
+    }
+}
+{% elif subdomain == 'video1' %}
+server {
+    server_name video1-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    location / {
+        proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+        proxy_pass https://practo-dev-media-upload-test.s3.ap-south-1.amazonaws.com/content$request_uri;
+    }
+}
+{% else %}
+server {
+    server_name {{ subdomain }}-{{ instance_name }}.practodev.com;
+    listen 443 ssl;
+
+    set $upstream_cluster_elb_dns http://{{ cluster_elb_dns[0] }};
+
+    location / {
+        include proxy_params;
+        proxy_pass $upstream_cluster_elb_dns;
+    }
+}
+{% endif %}
