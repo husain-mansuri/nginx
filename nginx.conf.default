@@ -33,8 +33,10 @@ http {
     #gzip  on;
 
     server {
-        listen       8080;
+        listen       80;
         server_name  localhost;
+
+        #charset koi8-r;
 
         #access_log  logs/host.access.log  main;
 
@@ -111,5 +113,5 @@ http {
     #        index  index.html index.htm;
     #    }
     #}
-    include servers/*;
+
 }
